@@ -1,0 +1,5 @@
+/* All dashboard styles have been moved to theme.css for modern styling and RTL support. */
+.container-view { display: none; }
+#status, #sessions, #payments, #profiles, #profile, #buyprofile, #redirecting { 
+    /* This ensures the JS toggle still works correctly */
+}

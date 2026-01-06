@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>پنل کاربری میکروتیک</title>
+    <link rel="stylesheet" type="text/css" href="../css/theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../js/generic.js"></script>
+    <script src="../js/user.js"></script>
+</head>
+<body>
+    <div id="global-blocker">
+        <div class="card" style="padding: 20px; background: #0f1724; border-radius: 16px;">
+            <img src="../img/ajax-loader.gif" alt="Loading...">
+        </div>
+    </div>
+
+    <div class="topbar">
+        <div class="topbar-wrapper">
+            <div class="brand">
+                <img src="../img/mikrotik_logo.png" class="logo" alt="Mikrotik">
+                <h2>مدیریت کاربران</h2>
+            </div>
+            <div class="logout-container">
+                <button class="loginbtn btn-logout" onclick="onMenuClick(document.getElementById('menu-logout'))">خروج</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <ul class="menu" id="menu">
+                <li><a id="menu-status" href="#" onclick="onMenuClick(this); return false;">وضعیت کاربری</a></li>
+                <li><a id="menu-sessions" href="#" onclick="onMenuClick(this); return false;">گزارش اتصالات</a></li>
+                <li><a id="menu-payments" href="#" onclick="onMenuClick(this); return false;">پرداخت‌ها</a></li>
+                <li><a id="menu-profiles" href="#" onclick="onMenuClick(this); return false;">پروفایل‌ها</a></li>
+                <li style="display:none"><a id="menu-logout" href="#" onclick="onMenuClick(this); return false;">خروج</a></li>
+            </ul>
+        </aside>
+
+        <main class="content" id="container">
+            <div class="container-view" id="status">
+                <div class="section-card">
+                    <h4>اطلاعات حساب کاربری</h4>
+                    <div class="table-responsive"><table id="status-data"></table></div>
+                </div>
+                <div class="section-card">
+                    <h4>پروفایل‌های فعال</h4>
+                    <div class="table-responsive"><table id="status-profiles"></table></div>
+                </div>
+                <div class="section-card">
+                    <h4>پروفایل‌های منقضی شده</h4>
+                    <div class="table-responsive"><table id="status-exp-profiles"></table></div>
+                </div>
+            </div>
+
+            <div class="container-view" id="sessions">
+                <div class="section-card">
+                    <h4>گزارش اتصالات (Sessions)</h4>
+                    <div class="table-responsive"><table id="sessions-sessions"></table></div>
+                </div>
+            </div>
+
+            <div class="container-view" id="payments">
+                <div class="section-card">
+                    <h4>تاریخچه پرداخت‌ها</h4>
+                    <div class="table-responsive"><table id="payments-payments"></table></div>
+                </div>
+            </div>
+
+            <div class="container-view" id="profiles">
+                <div class="section-card">
+                    <h4>همه پروفایل‌ها</h4>
+                    <div class="table-responsive"><table id="profiles-profiles"></table></div>
+                </div>
+            </div>
+
+            <div class="container-view" id="profile">
+                <div class="section-card">
+                    <h4>جزئیات پروفایل</h4>
+                    <div class="table-responsive"><table id="profile-data"></table></div>
+                </div>
+            </div>
+
+            <div class="container-view" id="buyprofile">
+                <div class="section-card">
+                    <h4>خرید پروفایل</h4>
+                    <div id="buyprofile-buyprofile"></div>
+                </div>
+            </div>
+
+            <div class="container-view" id="redirecting" style="text-align: center;">
+                <div class="section-card">
+                    <p>در حال انتقال به درگاه پرداخت... لطفاً منتظر بمانید.</p>
+                </div>
+            </div>
+
+            <footer class="main-footer">
+                <div class="footer-text">
+                    <span>Built between pings by</span>
+                    <a href="https://ramtiin.ir" target="_blank">Ramtin</a>
+                    <span>@</span>
+                    <a href="https://netadminplus.com" target="_blank">NetAdminPlus</a>
+                    <span class="heart-icon">❤️</span>
+                </div>
+                <div class="social-links">
+                    <a href="https://github.com/netadminplus" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="https://www.linkedin.com/in/ramtin-rahmani/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://youtube.com/netadminplus" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="https://instagram.com/netadminplus" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                </div>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>

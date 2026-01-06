@@ -1,0 +1,217 @@
+@font-face{
+    font-family: 'IRANSans';
+    src: url('../fonts/IRANSans.woff2') format('woff2'), url('../fonts/IRANSans.woff') format('woff');
+    font-weight: 300 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root{
+    --bg:#0b1220;
+    --card:#0f1724;
+    --muted:rgba(255,255,255,0.45);
+    --text:#e6eef8;
+    --accent:#6ee7b7;
+    --accent-2:#34d399;
+    --radius:16px;
+    --shadow: 0 20px 50px rgba(0,0,0,0.5);
+    --sidebar-w: 250px; /* Fixed width for alignment logic */
+}
+
+*{ box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Stops global page scroll */
+}
+
+body {
+    font-family: 'IRANSans', Tahoma, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    direction: rtl;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* --- Topbar Alignment Sync --- */
+.topbar { 
+    width: 100%;
+    background: var(--card); 
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    position: relative;
+}
+
+.topbar-wrapper {
+    max-width: 1200px; /* Matches layout width */
+    margin: 0 auto;
+    display: grid;
+    /* Mirror the layout: [Content Column] [Sidebar Column] */
+    grid-template-columns: 1fr var(--sidebar-w);
+    align-items: center;
+    padding: 12px 20px;
+    gap: 30px;
+}
+
+/* Brand is centered exactly above the content area */
+.topbar .brand {
+    grid-column: 1; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.topbar .logo { height: 42px; width: auto; }
+.topbar h2 { font-size: 1.1rem; margin: 0; color: #fff; white-space: nowrap; }
+
+/* Logout button pinned to the far right of the screen, out of the way */
+.logout-container {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* --- Login Page Centering --- */
+.login-body {
+    background: radial-gradient(circle at top right, #1e293b, #0f172a, #020617);
+    justify-content: center;
+    align-items: center;
+}
+
+.login-wrapper {
+    width: 100%;
+    max-width: 440px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-card {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    border-radius: var(--radius);
+    padding: 40px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center everything inside */
+}
+
+.login-card .brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.login-card .logo { height: 64px; margin-bottom: 15px; }
+.login-card h1 { font-size: 1.5rem; text-align: center; }
+.login-card .subtitle { text-align: center; width: 100%; }
+
+/* --- Dashboard Content --- */
+.layout { 
+    display: flex; 
+    max-width: 1200px; 
+    margin: 30px auto 0 auto; 
+    gap: 30px; 
+    padding: 0 20px; 
+    flex: 1; 
+    width: 100%;
+}
+
+.sidebar { width: var(--sidebar-w); flex-shrink: 0; }
+.menu { list-style: none; padding: 10px; background: var(--card); border-radius: var(--radius); }
+.menu li a { display: block; padding: 12px 15px; color: var(--muted); text-decoration: none; border-radius: 10px; font-weight: 500; }
+.menu li a.active-menu { background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #042018; font-weight: 700; }
+
+.content { 
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    min-width: 0;
+}
+
+.section-card { 
+    background: var(--card); 
+    border-radius: var(--radius); 
+    padding: 24px; 
+    margin-bottom: 24px; 
+    border: 1px solid rgba(255,255,255,0.03); 
+    width: 100%; 
+    max-width: 850px; 
+}
+
+.table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+h4 { color: var(--accent); border-right: 4px solid var(--accent); padding-right: 12px; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: right; color: var(--accent); padding: 14px; border-bottom: 2px solid rgba(255,255,255,0.05); }
+td { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+
+/* Horizontal Scroll Fixes */
+#status-data { min-width: 0 !important; } /* Force account info to wrap */
+#status-profiles, #sessions-sessions, #payments-payments { min-width: 550px; }
+
+/* --- Buttons --- */
+.loginbtn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 12px 24px; border-radius: 12px; border: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #042018; font-weight: 700; cursor: pointer; transition: 0.2s;
+    font-family: 'IRANSans', sans-serif;
+}
+
+.btn-logout {
+    min-width: 90px;
+    padding: 8px 18px !important;
+    margin: 0 !important;
+    font-size: 0.85rem !important;
+}
+
+/* --- Footer --- */
+.main-footer { 
+    width: 100%; 
+    max-width: 850px; 
+    margin: auto auto 0 auto; 
+    padding: 40px 0;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.footer-text { 
+    color: var(--muted); font-size: 0.85rem; direction: ltr;
+    display: flex; justify-content: center; align-items: center; gap: 5px; margin-bottom: 15px;
+}
+.footer-text a { color: var(--accent); text-decoration: none; }
+.heart-icon { color: #ef4444; font-size: 1rem; transform: translateY(1px); }
+
+.social-links { display: flex; justify-content: center; gap: 20px; }
+.social-links a { color: var(--muted); font-size: 1.4rem; transition: 0.3s; }
+.social-links a:hover { color: var(--accent); }
+
+/* --- Mobile Fixes --- */
+@media (max-width: 900px) {
+    .topbar .brand { display: none; } /* HIDDEN ON MOBILE AS REQUESTED */
+    .topbar-wrapper { display: flex; justify-content: flex-start; padding: 10px 15px; }
+    .logout-container { position: static; transform: none; right: auto; top: auto; }
+    
+    .layout { flex-direction: column; margin-top: 15px; padding: 0 15px; }
+    .sidebar { width: 100%; }
+    .menu { display: flex; overflow-x: auto; white-space: nowrap; gap: 8px; }
+    .content { align-items: stretch; }
+    .main-footer { max-width: 100%; }
+}
+
+#global-blocker { position: fixed; inset: 0; background: rgba(11, 18, 32, 0.9); backdrop-filter: blur(8px); z-index: 9999; display: none; align-items: center; justify-content: center; }
+#global-blocker.visible { display: flex !important; }
