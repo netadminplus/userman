@@ -1,22 +1,39 @@
-var UM_PROF_STATE = {0:"در انتظار", 1:"در حال اجرا", 2:"فعال", 3:"استفاده شده"};
-var UM_PROF_STARTS_AT = {0:"زمان ورود", 1:"بلافاصله"};
-var UM_PAY_STATE = {0:"شروع شده", 1:"در انتظار", 2:"تایید شده", 3:"رد شده", 4:"خطا", 5:"زمان پایان یافته", 6:"لغو شده", 7:"تایید کاربر"};
+var UM_PROF_STATE = {0:"Pending", 1:"Running", 2:"Active", 3:"Used"};
+var UM_PROF_STARTS_AT = {0:"On Login", 1:"Immediately"};
+var UM_PAY_STATE = {0:"Started", 1:"Pending", 2:"Approved", 3:"Rejected", 4:"Error", 5:"Timed Out", 6:"Cancelled", 7:"User Approved"};
 
-function faTime(str) {
+function formatTime(str) {
     if (!str || str === "0") return "0";
-    if (str.toLowerCase() === "unlimited") return "نامحدود";
-    return str
-        .replace(/(\d+)d/g, '$1 روز و ')
-        .replace(/(\d+)h/g, '$1 ساعت و ')
-        .replace(/(\d+)m/g, '$1 دقیقه و ')
-        .replace(/(\d+)s/g, '$1 ثانیه و ')
-        .replace(/ و $/g, '')
-        .trim();
+    if (str.toLowerCase() === "unlimited") return "Unlimited";
+    
+    var totalDays = 0;
+    var weeks = 0, days = 0, hours = 0, minutes = 0, seconds = 0;
+    
+    var weeksMatch = str.match(/(\d+)w/);
+    var daysMatch = str.match(/(\d+)d/);
+    var hoursMatch = str.match(/(\d+)h/);
+    var minutesMatch = str.match(/(\d+)m/);
+    var secondsMatch = str.match(/(\d+)s/);
+    
+    if (weeksMatch) weeks = parseInt(weeksMatch[1]);
+    if (daysMatch) days = parseInt(daysMatch[1]);
+    if (hoursMatch) hours = parseInt(hoursMatch[1]);
+    if (minutesMatch) minutes = parseInt(minutesMatch[1]);
+    if (secondsMatch) seconds = parseInt(secondsMatch[1]);
+    
+    totalDays = (weeks * 7) + days;
+    
+    var result = totalDays + "d";
+    if (hours > 0 || minutes > 0 || seconds > 0) {
+        result += " " + hours + "h " + minutes + "m " + seconds + "s";
+    }
+    
+    return result.trim();
 }
 
-function faUnits(str) {
+function formatUnits(str) {
     if (!str) return str;
-    return str.replace(/GiB/gi, 'گیگابایت').replace(/MiB/gi, 'مگابایت').replace(/KiB/gi, 'کیلوبایت').replace(/B/gi, 'بایت');
+    return str.replace(/GiB/gi, 'GB').replace(/MiB/gi, 'MB').replace(/KiB/gi, 'KB');
 }
 
 function updateMenuState() {
@@ -27,14 +44,14 @@ function updateMenuState() {
     });
 }
 
-function blockGUI() { 
+function blockGUI() {
     var blocker = document.getElementById("global-blocker");
-    if(blocker) blocker.classList.add("visible"); 
+    if(blocker) blocker.classList.add("visible");
 }
 
-function unblockGUI() { 
+function unblockGUI() {
     var blocker = document.getElementById("global-blocker");
-    if(blocker) blocker.classList.remove("visible"); 
+    if(blocker) blocker.classList.remove("visible");
 }
 
 function processFailedResp(obj) { if (obj.type === "LOGIN") location.reload(); else alert(obj.data.error); }
@@ -70,12 +87,12 @@ function loadStatusData() {
             var obj = JSON.parse(responseText);
             if (obj.success) {
                 var tableRows = "";
-                tableRows += "<tr><td>نام کاربری:</td><td>" + obj.data.username + "</td></tr>";
-                tableRows += "<tr><td>تعداد کاربران همزمان مجاز:</td><td>" + (obj.data.sharedUsers == 0 ? 'نامحدود' : obj.data.sharedUsers) + "</td></tr>";
-                tableRows += "<tr><td>اتصال‌های فعال فعلی:</td><td>" + obj.data.activeSess + "</td></tr>";
-                tableRows += "<tr><td>کل دانلود:</td><td>" + faUnits(obj.data.download) + "</td></tr>";
-                tableRows += "<tr><td>کل آپلود:</td><td>" + faUnits(obj.data.upload) + "</td></tr>";
-                tableRows += "<tr><td>کل زمان اتصال:</td><td>" + faTime(obj.data.uptime) + "</td></tr>";
+                tableRows += "<tr><td>Username:</td><td>" + obj.data.username + "</td></tr>";
+                tableRows += "<tr><td>Allowed Concurrent Users:</td><td>" + (obj.data.sharedUsers == 0 ? 'Unlimited' : obj.data.sharedUsers) + "</td></tr>";
+                tableRows += "<tr><td>Active Connections:</td><td>" + obj.data.activeSess + "</td></tr>";
+                tableRows += "<tr><td>Total Download:</td><td>" + formatUnits(obj.data.download) + "</td></tr>";
+                tableRows += "<tr><td>Total Upload:</td><td>" + formatUnits(obj.data.upload) + "</td></tr>";
+                tableRows += "<tr><td>Total Uptime:</td><td>" + formatTime(obj.data.uptime) + "</td></tr>";
                 document.getElementById("status-data").innerHTML = tableRows;
             }
         } catch (e) { console.error(e); }
@@ -86,17 +103,17 @@ function loadStatusData() {
         try {
             var obj = JSON.parse(responseText);
             if(obj.success) {
-                var tableRows = "<thead><tr><th>نام</th><th>وضعیت</th><th>زمان باقی‌مانده</th><th>عملیات</th></tr></thead><tbody>";
-                var expTableRows = "<thead><tr><th>نام</th><th>وضعیت</th><th>تاریخ انقضا</th></tr></thead><tbody>";
+                var tableRows = "<thead><tr><th>Name</th><th>Status</th><th>Time Remaining</th><th>Action</th></tr></thead><tbody>";
+                var expTableRows = "<thead><tr><th>Name</th><th>Status</th><th>Expiry Date</th></tr></thead><tbody>";
                 var waitingRows = "", runningRows = "";
                 obj.data.profiles.forEach(function(p) {
                     var nameLink = "<td><a class=\"link\" href=\"#profile:"+p.profileId+"\">" + p.name + "</a></td>";
                     if (p.state == 3) { expTableRows += "<tr>" + nameLink + "<td>" + UM_PROF_STATE[p.state] + "</td><td>" + p.expAt + "</td></tr>"; }
                     else if (p.state == 0 || p.state == 1) {
-                        var row = "<tr>" + nameLink + "<td>" + UM_PROF_STATE[p.state] + "</td><td>" + faTime(p.expAfter) + "</td>";
-                        row += "<td><button class='loginbtn btn-logout' value=\"" + p.id + "\" onclick=\"onActivateClick(this)\">فعال‌سازی</button></td></tr>";
+                        var row = "<tr>" + nameLink + "<td>" + UM_PROF_STATE[p.state] + "</td><td>" + formatTime(p.expAfter) + "</td>";
+                        row += "<td><button class='loginbtn btn-logout' value=\"" + p.id + "\" onclick=\"onActivateClick(this)\">Activate</button></td></tr>";
                         if(p.state == 1) runningRows += row; else waitingRows += row;
-                    } else { tableRows += "<tr>" + nameLink + "<td>" + UM_PROF_STATE[p.state] + "</td><td>" + faTime(p.expAfter) + "</td><td></td></tr>"; }
+                    } else { tableRows += "<tr>" + nameLink + "<td>" + UM_PROF_STATE[p.state] + "</td><td>" + formatTime(p.expAfter) + "</td><td></td></tr>"; }
                 });
                 document.getElementById("status-profiles").innerHTML = tableRows + runningRows + waitingRows + "</tbody>";
                 document.getElementById("status-exp-profiles").innerHTML = expTableRows + "</tbody>";
@@ -110,9 +127,9 @@ function loadProfiles() {
         try {
             var obj = JSON.parse(responseText);
             if(obj.success) {
-                var tableRows = "<thead><tr><th>نام پروفایل</th><th>اعتبار</th><th>شروع از</th></tr></thead><tbody>";
+                var tableRows = "<thead><tr><th>Profile Name</th><th>Validity</th><th>Starts At</th></tr></thead><tbody>";
                 obj.data.profiles.forEach(function(p) {
-                    tableRows += "<tr><td><a class=\"link\" href=\"#profile:"+p.id+"\">" + p.name + "</a></td><td>" + faTime(p.validity) + "</td><td>" + UM_PROF_STARTS_AT[p.startsAt] + "</td></tr>";
+                    tableRows += "<tr><td><a class=\"link\" href=\"#profile:"+p.id+"\">" + p.name + "</a></td><td>" + formatTime(p.validity) + "</td><td>" + UM_PROF_STARTS_AT[p.startsAt] + "</td></tr>";
                 });
                 document.getElementById("profiles-profiles").innerHTML = tableRows + "</tbody>";
             }
@@ -126,10 +143,10 @@ function loadSessions() {
         try {
             var obj = JSON.parse(responseText);
             if(obj.success) {
-                var tableRows = "<thead><tr><th>شروع</th><th>پایان</th><th>مدت اتصال</th><th>دانلود</th><th>آپلود</th><th>وضعیت</th></tr></thead><tbody>";
+                var tableRows = "<thead><tr><th>Start</th><th>End</th><th>Duration</th><th>Download</th><th>Upload</th><th>Status</th></tr></thead><tbody>";
                 var sessions = obj.data.sessions;
                 for (var i = sessions.length - 1; i >= 0; i--) {
-                    tableRows += "<tr><td>" + sessions[i].startTime + "</td><td>" + sessions[i].endTime + "</td><td>" + faTime(sessions[i].uptime) + "</td><td>" + faUnits(sessions[i].downloaded) + "</td><td>" + faUnits(sessions[i].uploaded) + "</td><td>" + (sessions[i].active ? 'فعال' : 'بسته شده') + "</td></tr>";
+                    tableRows += "<tr><td>" + sessions[i].startTime + "</td><td>" + sessions[i].endTime + "</td><td>" + formatTime(sessions[i].uptime) + "</td><td>" + formatUnits(sessions[i].downloaded) + "</td><td>" + formatUnits(sessions[i].uploaded) + "</td><td>" + (sessions[i].active ? 'Active' : 'Closed') + "</td></tr>";
                 }
                 document.getElementById("sessions-sessions").innerHTML = tableRows + "</tbody>";
             }
@@ -150,10 +167,10 @@ function loadPaymentTypes() {
                     for (var i = 0; i < pTypes.length; i++) {
                         var checkStr = (i == 0) ? "checked=\"checked\"" : "";
                         if (pTypes[i].typeId === 1) resultHtml += "<label style='display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer'><input type=\"radio\" name=\"paymethod\" value=\"1\" " + checkStr + " /> <img src=\"../img/PayPal_mark_37x23.gif\" /> PayPal</label>";
-                        else if (pTypes[i].typeId === 2) resultHtml += "<label style='display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer'><input type=\"radio\" name=\"paymethod\" value=\"2\" " + checkStr + " /> کارت اعتباری (Authorize.net)</label>";
+                        else if (pTypes[i].typeId === 2) resultHtml += "<label style='display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer'><input type=\"radio\" name=\"paymethod\" value=\"2\" " + checkStr + " /> Credit Card (Authorize.net)</label>";
                     }
-                    resultHtml += "</form><button class='loginbtn' style='width:auto; padding:10px 30px' onclick=\"onBuyClick(this);\">خرید و پرداخت</button>";
-                } else { resultHtml += "<div style=\"text-align:center;padding:20px;\">هیچ درگاه پرداختی فعال نیست.</div>"; }
+                    resultHtml += "</form><button class='loginbtn' style='width:auto; padding:10px 30px' onclick=\"onBuyClick(this);\">Buy and Pay</button>";
+                } else { resultHtml += "<div style=\"text-align:center;padding:20px;\">No payment gateway is active.</div>"; }
                 document.getElementById("buyprofile-buyprofile").innerHTML = resultHtml;
             }
         } catch (e) { alert("Unknown error."); }
@@ -166,10 +183,10 @@ function loadPayments() {
         try {
             var obj = JSON.parse(responseText);
             if(obj.success) {
-                var tableRows = "<thead><tr><th>نوع</th><th>پروفایل</th><th>شروع</th><th>پایان</th><th>پیام</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>";
+                var tableRows = "<thead><tr><th>Type</th><th>Profile</th><th>Start</th><th>End</th><th>Message</th><th>Status</th><th>Action</th></tr></thead><tbody>";
                 obj.data.payments.forEach(function(p) {
                     tableRows += "<tr><td>Paypal</td><td>" + p.profileName + "</td><td>" + p.start + "</td><td>" + p.end + "</td><td>" + p.message + "</td><td>" + UM_PAY_STATE[p.state] + "</td>";
-                    if (p.state == 0 || p.state == 1 || p.state == 7) tableRows += "<td><button class='loginbtn btn-logout' value=\"" + p.id + "\" onclick=\"onContinueBuyClick(this)\">ادامه خرید</button></td>";
+                    if (p.state == 0 || p.state == 1 || p.state == 7) tableRows += "<td><button class='loginbtn btn-logout' value=\"" + p.id + "\" onclick=\"onContinueBuyClick(this)\">Continue Purchase</button></td>";
                     else tableRows += "<td></td>";
                     tableRows += "</tr>";
                 });
@@ -186,8 +203,8 @@ function loadProfile(profileId) {
             var obj = JSON.parse(responseText);
             if (obj.success) {
                 var d = obj.data;
-                var tableRows = "<tr><td>نام پروفایل:</td><td>" + d.name + "</td></tr><tr><td>قیمت:</td><td>" + d.price + "</td></tr><tr><td>مدت اعتبار:</td><td>" + faTime(d.validity) + "</td></tr><tr><td>شروع از:</td><td>" + UM_PROF_STARTS_AT[d.startsAt] + "</td></tr>";
-                if (d.canBuy) tableRows += "<tr><td colspan=\"2\"><button class='loginbtn btn-logout' onclick=\"window.location.href='#buyprofile:" + d.id + "'\">خرید این پروفایل</button></td></tr>";
+                var tableRows = "<tr><td>Profile Name:</td><td>" + d.name + "</td></tr><tr><td>Price:</td><td>" + d.price + "</td></tr><tr><td>Validity:</td><td>" + formatTime(d.validity) + "</td></tr><tr><td>Starts At:</td><td>" + UM_PROF_STARTS_AT[d.startsAt] + "</td></tr>";
+                if (d.canBuy) tableRows += "<tr><td colspan=\"2\"><button class='loginbtn btn-logout' onclick=\"window.location.href='#buyprofile:" + d.id + "'\">Buy This Profile</button></td></tr>";
                 document.getElementById("profile-data").innerHTML = tableRows;
             }
         } catch (e) { alert("Unknown error."); }
