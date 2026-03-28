@@ -36,6 +36,24 @@ function formatUnits(str) {
     return str.replace(/GiB/gi, 'GB').replace(/MiB/gi, 'MB').replace(/KiB/gi, 'KB');
 }
 
+function parseTrafficToGB(str) {
+    if (!str || str === "0") return 0;
+    var match = str.match(/([\d.]+)\s*(GiB|MiB|KiB|GB|MB|KB)/i);
+    if (!match) return parseFloat(str) || 0;
+    var value = parseFloat(match[1]);
+    var unit = match[2].toLowerCase();
+    if (unit === 'gib' || unit === 'gb') return value;
+    if (unit === 'mib' || unit === 'mb') return value / 1024;
+    if (unit === 'kib' || unit === 'kb') return value / (1024 * 1024);
+    return value;
+}
+
+function formatTraffic(gbValue) {
+    if (!gbValue || gbValue === 0) return "0 GB";
+    var rounded = Math.ceil(gbValue * 2) / 2;
+    return rounded.toFixed(1) + " GB";
+}
+
 function updateMenuState() {
     var hash = getLocationHash().split(":")[0] || "status";
     document.querySelectorAll('.menu a').forEach(function(link) {
@@ -63,7 +81,6 @@ function hideAll() {
     });
     document.getElementById("status-data").innerHTML = "";
     document.getElementById("status-profiles").innerHTML = "";
-    document.getElementById("status-exp-profiles").innerHTML = "";
 }
 
 function processNavigation() {
@@ -90,9 +107,10 @@ function loadStatusData() {
                 tableRows += "<tr><td>Username:</td><td>" + obj.data.username + "</td></tr>";
                 tableRows += "<tr><td>Allowed Concurrent Users:</td><td>" + (obj.data.sharedUsers == 0 ? 'Unlimited' : obj.data.sharedUsers) + "</td></tr>";
                 tableRows += "<tr><td>Active Connections:</td><td>" + obj.data.activeSess + "</td></tr>";
-                tableRows += "<tr><td>Total Download:</td><td>" + formatUnits(obj.data.download) + "</td></tr>";
-                tableRows += "<tr><td>Total Upload:</td><td>" + formatUnits(obj.data.upload) + "</td></tr>";
-                tableRows += "<tr><td>Total Uptime:</td><td>" + formatTime(obj.data.uptime) + "</td></tr>";
+                var downloadGB = parseTrafficToGB(obj.data.download);
+                var uploadGB = parseTrafficToGB(obj.data.upload);
+                var totalTraffic = downloadGB + uploadGB;
+                tableRows += "<tr><td>Total Traffic Used:</td><td>" + formatTraffic(totalTraffic) + "</td></tr>";
                 document.getElementById("status-data").innerHTML = tableRows;
             }
         } catch (e) { console.error(e); }
@@ -104,19 +122,16 @@ function loadStatusData() {
             var obj = JSON.parse(responseText);
             if(obj.success) {
                 var tableRows = "<thead><tr><th>Name</th><th>Status</th><th>Time Remaining</th><th>Action</th></tr></thead><tbody>";
-                var expTableRows = "<thead><tr><th>Name</th><th>Status</th><th>Expiry Date</th></tr></thead><tbody>";
                 var waitingRows = "", runningRows = "";
                 obj.data.profiles.forEach(function(p) {
                     var nameLink = "<td><a class=\"link\" href=\"#profile:"+p.profileId+"\">" + p.name + "</a></td>";
-                    if (p.state == 3) { expTableRows += "<tr>" + nameLink + "<td>" + UM_PROF_STATE[p.state] + "</td><td>" + p.expAt + "</td></tr>"; }
-                    else if (p.state == 0 || p.state == 1) {
+                    if (p.state == 0 || p.state == 1) {
                         var row = "<tr>" + nameLink + "<td>" + UM_PROF_STATE[p.state] + "</td><td>" + formatTime(p.expAfter) + "</td>";
                         row += "<td><button class='loginbtn btn-logout' value=\"" + p.id + "\" onclick=\"onActivateClick(this)\">Activate</button></td></tr>";
                         if(p.state == 1) runningRows += row; else waitingRows += row;
                     } else { tableRows += "<tr>" + nameLink + "<td>" + UM_PROF_STATE[p.state] + "</td><td>" + formatTime(p.expAfter) + "</td><td></td></tr>"; }
                 });
                 document.getElementById("status-profiles").innerHTML = tableRows + runningRows + waitingRows + "</tbody>";
-                document.getElementById("status-exp-profiles").innerHTML = expTableRows + "</tbody>";
             }
         } catch (e) { console.error(e); }
     });
